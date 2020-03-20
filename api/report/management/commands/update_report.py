@@ -7,6 +7,8 @@ import requests
 from apscheduler.schedulers.blocking import BlockingScheduler
 from django.core.management.base import BaseCommand
 from django.utils.timezone import make_aware
+from django.conf import settings
+import boto3
 
 from api.report.models import *
 
@@ -17,10 +19,23 @@ def cron(*args, **options):
     if 6 <= datetime.now().hour <= 20:
 
         print(f"Cron job is running. The time is {datetime.now()}")
-        request = requests.get(url)
 
-        content = request.content.decode('utf8').replace('var database=', '')
+        s3resource = boto3.resource('s3',
+                                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+
+        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+
+        obj = s3resource.Object(bucket_name,"ministerio_saude_brasil/2020-03-20/16-47/rawData.json")
+
+        # request = requests.get(url)
+
+        # content = request.content.decode('utf8').replace('var database=', '')
+        # data = json.loads(content)
+        content = obj.get()['Body'].read().decode('utf-8')
         data = json.loads(content)
+
+        print('Object body: {}'.format(data['brazil']))
 
         for record in data['brazil']:
             date_time = datetime.strptime(f"{record['date']} {record['time']}",
@@ -57,6 +72,6 @@ class Command(BaseCommand):
         print('Cron started! Wait the job starts!')
 
         scheduler = BlockingScheduler()
-        scheduler.add_job(cron, 'cron', minutes=20, timezone='America/Maceio')
+        scheduler.add_job(cron, 'interval', minutes=1, timezone=settings.TIME_ZONE)
 
         scheduler.start()
