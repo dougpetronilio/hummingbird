@@ -25,7 +25,7 @@ def cron(*args, **options):
                                     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
-        url = "%s%s"%(settings.BINO_URL, 'crawl/ministerio_saude_brasil')
+        url = "%s%s"%(settings.BINO_URL, '/crawl/ministerio_saude_brasil')
         response = requests.post(url = url, data = {})
         file_name = json.loads(response.content.decode('utf-8'))['path']
 
