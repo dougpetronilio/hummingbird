@@ -25,13 +25,12 @@ def cron(*args, **options):
                                     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+        url = "%s%s"%(settings.BINO_URL, 'crawl/ministerio_saude_brasil')
+        response = requests.post(url = url, data = {})
+        file_name = json.loads(response.content.decode('utf-8'))['path']
 
         obj = s3resource.Object(bucket_name,"ministerio_saude_brasil/2020-03-20/16-47/rawData.json")
 
-        # request = requests.get(url)
-
-        # content = request.content.decode('utf8').replace('var database=', '')
-        # data = json.loads(content)
         content = obj.get()['Body'].read().decode('utf-8')
         data = json.loads(content)
 
